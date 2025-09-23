@@ -1,0 +1,34 @@
+[
+  {
+    "firmaIsmi": "2",
+    "tezgahSeriNo": "2",
+    "tezgahSaati": "2",
+    "aciklama": "2",
+    "musteriIsmi": "2",
+    "muhendisAdi": "2"
+  },
+  {
+    "firmaIsmi": "",
+    "tezgahSeriNo": "",
+    "tezgahSaati": "",
+    "aciklama": "",
+    "musteriIsmi": "",
+    "muhendisAdi": ""
+  },
+  {
+    "firmaIsmi": "",
+    "tezgahSeriNo": "",
+    "tezgahSaati": "",
+    "aciklama": "",
+    "musteriIsmi": "",
+    "muhendisAdi": ""
+  },
+  {
+    "firmaIsmi": "2",
+    "tezgahSeriNo": "",
+    "tezgahSaati": "",
+    "aciklama": "",
+    "musteriIsmi": "",
+    "muhendisAdi": ""
+  }
+]
