@@ -1,20 +1,21 @@
-import React from "react";
 import Link from "next/link";
 
 export default function Home() {
   return (
-    <div style={{ textAlign: "center", marginTop: "50px" }}>
-      <h1>HTTV Ana Sayfa</h1>
-      <p>Hoş geldiniz! Lütfen bir sayfa seçin:</p>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-500 via-cyan-500 to-blue-700 text-white">
+      <h1 className="text-4xl font-extrabold mb-6 drop-shadow-lg">
+        HTTV Yönetim Sistemi
+      </h1>
+      <p className="text-lg mb-8 text-white/90">
+        Bakım ve Arıza Takip Platformuna Hoş Geldiniz
+      </p>
 
-      <div style={{ marginTop: "20px" }}>
-        <Link href="/login">
-          <button style={{ margin: "10px", padding: "10px 20px" }}>Giriş</button>
-        </Link>
-        <Link href="/bakim">
-          <button style={{ margin: "10px", padding: "10px 20px" }}>Bakım</button>
-        </Link>
-      </div>
+      <Link
+        href="/login"
+        className="px-8 py-3 rounded-xl font-semibold bg-white text-blue-600 shadow-lg hover:bg-gray-100 transition"
+      >
+        🚀 Giriş Yap
+      </Link>
     </div>
   );
 }
