@@ -4,16 +4,31 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = "file:./dev.db"
+  url      = env("DATABASE_URL")
 }
 
 model Bakim {
   id            Int      @id @default(autoincrement())
-  firmaIsmi     String
+  firmaIsmi     String?
   tezgahSeriNo  String
-  tezgahSaati   String
+  aciklama      String
+  musteriAdi    String
+  musteriMail   String
+  muhendisAdi   String?
+  musteriImza   String?
+  teknisyenImza String?
+  createdAt     DateTime @default(now())
+}
+
+model Ariza {
+  id            Int      @id @default(autoincrement())
+  firmaIsmi     String?
+  tezgahSeriNo  String
   aciklama      String
   musteriIsmi   String
-  muhendisIsmi  String
+  musteriMail   String
+  muhendisAdi   String?
+  musteriImza   String?
+  teknisyenImza String?
   createdAt     DateTime @default(now())
 }

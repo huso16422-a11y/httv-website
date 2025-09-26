@@ -1,108 +1,136 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
-export default function Ariza() {
-  const [musteriAdi, setMusteriAdi] = useState("");
-  const [tezgahSeriNo, setTezgahSeriNo] = useState("");
-  const [arizaTanimi, setArizaTanimi] = useState("");
-  const [cozum, setCozum] = useState("");
-  const [kayitlar, setKayitlar] = useState<any[]>([]);
+export default function ArizaForm() {
+  const [formData, setFormData] = useState({
+    firmaIsmi: "",
+    tezgahSeriNo: "",
+    aciklama: "",
+    musteriIsmi: "",
+    musteriMail: "",
+    muhendisAdi: "",
+    musteriImza: "",
+    teknisyenImza: "",
+  });
 
-  // Kayıtları JSON’dan al
-  useEffect(() => {
-    fetch("/api/ariza")
-      .then((res) => res.json())
-      .then((data) => setKayitlar(data));
-  }, []);
+  const [mesaj, setMesaj] = useState("");
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    try {
+      const res = await fetch("/api/ariza", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
 
-    const yeniKayit = {
-      musteriAdi,
-      tezgahSeriNo,
-      arizaTanimi,
-      cozum,
-      tarih: new Date().toLocaleString(),
-    };
-
-    const res = await fetch("/api/ariza", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(yeniKayit),
-    });
-
-    if (res.ok) {
-      setKayitlar([...kayitlar, yeniKayit]);
-      setMusteriAdi("");
-      setTezgahSeriNo("");
-      setArizaTanimi("");
-      setCozum("");
+      if (res.ok) {
+        setMesaj("✅ Arıza kaydı başarıyla oluşturuldu, PDF mail gönderildi.");
+        setFormData({
+          firmaIsmi: "",
+          tezgahSeriNo: "",
+          aciklama: "",
+          musteriIsmi: "",
+          musteriMail: "",
+          muhendisAdi: "",
+          musteriImza: "",
+          teknisyenImza: "",
+        });
+      } else {
+        const err = await res.json();
+        setMesaj("❌ Hata: " + err.error);
+      }
+    } catch (error) {
+      console.error(error);
+      setMesaj("❌ Beklenmedik bir hata oluştu.");
     }
   };
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Arıza Kaydı</h1>
-
-      <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 rounded-lg shadow">
-        <div>
-          <label className="block text-sm font-medium">Müşteri Adı</label>
-          <input
-            type="text"
-            value={musteriAdi}
-            onChange={(e) => setMusteriAdi(e.target.value)}
-            className="w-full p-2 border rounded"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium">Tezgah Seri No</label>
-          <input
-            type="text"
-            value={tezgahSeriNo}
-            onChange={(e) => setTezgahSeriNo(e.target.value)}
-            className="w-full p-2 border rounded"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium">Arıza Tanımı</label>
-          <textarea
-            value={arizaTanimi}
-            onChange={(e) => setArizaTanimi(e.target.value)}
-            className="w-full p-2 border rounded"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium">Çözüm</label>
-          <textarea
-            value={cozum}
-            onChange={(e) => setCozum(e.target.value)}
-            className="w-full p-2 border rounded"
-          />
-        </div>
-
-        <button type="submit" className="w-full bg-red-500 text-white py-2 rounded hover:bg-red-600">
+    <div className="max-w-2xl mx-auto p-6 bg-white shadow rounded">
+      <h1 className="text-xl font-bold mb-4">Arıza Kaydı</h1>
+      {mesaj && <p className="mb-4">{mesaj}</p>}
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <input
+          type="text"
+          name="firmaIsmi"
+          placeholder="Firma İsmi"
+          value={formData.firmaIsmi}
+          onChange={handleChange}
+          className="w-full p-2 border rounded"
+        />
+        <input
+          type="text"
+          name="tezgahSeriNo"
+          placeholder="Tezgah Seri No"
+          value={formData.tezgahSeriNo}
+          onChange={handleChange}
+          className="w-full p-2 border rounded"
+          required
+        />
+        <textarea
+          name="aciklama"
+          placeholder="Arıza Açıklaması"
+          value={formData.aciklama}
+          onChange={handleChange}
+          className="w-full p-2 border rounded"
+          required
+        />
+        <input
+          type="text"
+          name="musteriIsmi"
+          placeholder="Müşteri Adı"
+          value={formData.musteriIsmi}
+          onChange={handleChange}
+          className="w-full p-2 border rounded"
+          required
+        />
+        <input
+          type="email"
+          name="musteriMail"
+          placeholder="Müşteri Mail"
+          value={formData.musteriMail}
+          onChange={handleChange}
+          className="w-full p-2 border rounded"
+          required
+        />
+        <input
+          type="text"
+          name="muhendisAdi"
+          placeholder="Mühendis Adı"
+          value={formData.muhendisAdi}
+          onChange={handleChange}
+          className="w-full p-2 border rounded"
+        />
+        <input
+          type="text"
+          name="teknisyenImza"
+          placeholder="Teknisyen İmza"
+          value={formData.teknisyenImza}
+          onChange={handleChange}
+          className="w-full p-2 border rounded"
+        />
+        <input
+          type="text"
+          name="musteriImza"
+          placeholder="Müşteri İmza"
+          value={formData.musteriImza}
+          onChange={handleChange}
+          className="w-full p-2 border rounded"
+        />
+        <button
+          type="submit"
+          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+        >
           Kaydet
         </button>
       </form>
-
-      {/* Kayıtları Listele */}
-      <div className="mt-8">
-        <h2 className="text-xl font-semibold mb-4">Arıza Kayıtları</h2>
-        <ul className="space-y-2">
-          {kayitlar.map((k, i) => (
-            <li key={i} className="p-4 border rounded bg-gray-50">
-              <p><strong>Müşteri:</strong> {k.musteriAdi}</p>
-              <p><strong>Tezgah Seri No:</strong> {k.tezgahSeriNo}</p>
-              <p><strong>Arıza:</strong> {k.arizaTanimi}</p>
-              <p><strong>Çözüm:</strong> {k.cozum}</p>
-              <p className="text-sm text-gray-500"><strong>Tarih:</strong> {k.tarih}</p>
-            </li>
-          ))}
-        </ul>
-      </div>
     </div>
   );
 }
