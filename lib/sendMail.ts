@@ -1,31 +1,29 @@
 import nodemailer from "nodemailer";
 
-export async function sendMail(to: string, subject: string, html: string, attachments: any[] = []) {
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    console.error("❌ Mail gönderim hatası: EMAIL_USER veya EMAIL_PASS tanımlı değil");
-    return;
-  }
-
+export async function sendMail(
+  to: string,
+  subject: string,
+  html: string,
+  attachments: any[] = []
+) {
   const transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST,
+    host: process.env.EMAIL_HOST || "smtp.mail.me.com",
     port: Number(process.env.EMAIL_PORT) || 587,
-    secure: false,
+    secure: false, // iCloud için TLS => secure: false olmalı
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
     },
   });
 
-  try {
-    await transporter.sendMail({
-      from: `"HTTV Sistem" <${process.env.EMAIL_USER}>`,
-      to,
-      subject,
-      html,
-      attachments,
-    });
-    console.log("📩 Mail başarıyla gönderildi:", to);
-  } catch (err) {
-    console.error("❌ Mail gönderilemedi:", err);
-  }
+  const info = await transporter.sendMail({
+    from: process.env.EMAIL_USER,
+    to,
+    subject,
+    html,
+    attachments,
+  });
+
+  console.log("✅ Mail gönderildi:", info.messageId);
+  return info;
 }
