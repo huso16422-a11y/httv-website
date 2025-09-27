@@ -1,111 +1,87 @@
+import { NextApiRequest, NextApiResponse } from "next";
 import PDFDocument from "pdfkit";
 import nodemailer from "nodemailer";
+import getStream from "get-stream";
+import fs from "fs";
+import path from "path";
 
-export default async function handler(req, res) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+    return res.status(405).send("Yalnızca POST isteği destekleniyor.");
   }
 
   try {
     const {
       firmaIsmi,
+      musteriIsmi,
+      musteriEmail,
       tezgahSeriNo,
       tezgahSaati,
       aciklama,
-      musteriIsmi,
       muhendisAdi,
       musteriImza,
       muhendisImza,
     } = req.body;
 
     console.log("📩 Yeni bakım kaydı alındı...");
-    console.log("📄 Profesyonel PDF oluşturuluyor...");
 
+    // Font ve logo yolları
+    const fontPath = path.join(process.cwd(), "public", "fonts", "DejaVuSans.ttf");
+    const logoPath = path.join(process.cwd(), "public", "logo.png");
+
+    // PDF oluştur
     const doc = new PDFDocument({ margin: 50 });
-    let buffers: any[] = [];
+    let buffers: Buffer[] = [];
     doc.on("data", buffers.push.bind(buffers));
-    const pdfPromise = new Promise<Buffer>((resolve) => {
-      doc.on("end", () => resolve(Buffer.concat(buffers)));
-    });
+    doc.on("end", () => console.log("✅ PDF başarıyla oluşturuldu."));
 
-    // ✅ Türkçe font
-    doc.registerFont("DejaVu", process.cwd() + "/public/fonts/DejaVuSans.ttf");
+    doc.registerFont("DejaVu", fontPath);
 
-    // === HEADER ===
-    try {
-      doc.image(process.cwd() + "/public/logo.png", 50, 20, { width: 100 });
-    } catch {
-      console.log("⚠️ Logo yüklenemedi.");
+    // Logo
+    if (fs.existsSync(logoPath)) {
+      doc.image(logoPath, 50, 30, { width: 80 });
     }
 
-    doc.font("DejaVu").fontSize(18).fillColor("#1f2937").text("BAKIM RAPORU", 0, 40, {
-      align: "center",
-    });
+    // Başlık
+    doc.font("DejaVu").fontSize(20).text("🛠️ BAKIM RAPORU", { align: "center" });
+    doc.moveDown(2);
+
+    // Bilgiler
+    doc.fontSize(12).text(`📌 Firma İsmi: ${firmaIsmi}`);
+    doc.text(`👤 Müşteri İsmi: ${musteriIsmi}`);
+    doc.text(`📧 Müşteri Email: ${musteriEmail}`);
+    doc.text(`🔧 Tezgah Seri No: ${tezgahSeriNo}`);
+    if (tezgahSaati) doc.text(`⏱️ Tezgah Saati: ${tezgahSaati}`);
+    doc.text(`👨‍🔧 Mühendis Adı: ${muhendisAdi}`);
+    doc.moveDown();
+
+    // Açıklama
+    doc.fontSize(12).text("📝 Açıklama:", { underline: true });
+    doc.moveDown(0.5);
+    doc.fontSize(11).text(aciklama, { align: "justify" });
 
     doc.moveDown(2);
 
-    // === RAPOR BİLGİLERİ ===
-    const now = new Date();
-    const tarih = now.toLocaleDateString("tr-TR");
-    const raporNo = "BR-" + now.getTime();
-
-    doc.font("DejaVu").fontSize(12).fillColor("black");
-
-    const infoData = [
-      ["📌 Firma İsmi", firmaIsmi],
-      ["🔢 Tezgah Seri No", tezgahSeriNo],
-      ["⏱️ Tezgah Saati", tezgahSaati],
-      ["👤 Müşteri İsmi", musteriIsmi],
-      ["👨‍🔧 Mühendis Adı", muhendisAdi],
-      ["📅 Tarih", tarih],
-      ["🆔 Rapor No", raporNo],
-    ];
-
-    // tablo gibi hizala
-    infoData.forEach(([label, value]) => {
-      doc.font("DejaVu").fontSize(12).text(`${label}:`, { continued: true, width: 150 });
-      doc.font("DejaVu").fontSize(12).fillColor("#374151").text(` ${value}`);
-    });
-
-    doc.moveDown(1.5);
-
-    // === AÇIKLAMA ===
-    doc.font("DejaVu").fontSize(12).fillColor("black").text("📝 Açıklama", {
-      underline: true,
-    });
-    doc.moveDown(0.5);
-
-    doc.rect(50, doc.y, 500, 80).stroke();
-    doc.text(aciklama, 55, doc.y + 5, { width: 480, align: "left" });
-    doc.moveDown(6);
-
-    // === İMZALAR ===
-    doc.font("DejaVu").fontSize(12).fillColor("black").text("Onaylar", {
-      underline: true,
-    });
-    doc.moveDown(1);
-
+    // İmzalar
+    const startY = doc.y;
     if (musteriImza) {
-      const musteriImg = Buffer.from(musteriImza.split(",")[1], "base64");
-      doc.rect(50, doc.y, 200, 80).stroke();
-      doc.text("Müşteri İmzası", 55, doc.y - 15);
-      doc.image(musteriImg, 60, doc.y, { fit: [180, 60] });
+      const musteriImzaImg = musteriImza.replace(/^data:image\/png;base64,/, "");
+      const musteriImzaBuffer = Buffer.from(musteriImzaImg, "base64");
+      doc.image(musteriImzaBuffer, 80, startY, { width: 150, height: 70 });
+      doc.text("Müşteri İmzası", 110, startY + 80);
     }
 
     if (muhendisImza) {
-      const muhendisImg = Buffer.from(muhendisImza.split(",")[1], "base64");
-      doc.rect(350, doc.y, 200, 80).stroke();
-      doc.text("Mühendis İmzası", 355, doc.y - 15);
-      doc.image(muhendisImg, 360, doc.y, { fit: [180, 60] });
+      const muhendisImzaImg = muhendisImza.replace(/^data:image\/png;base64,/, "");
+      const muhendisImzaBuffer = Buffer.from(muhendisImzaImg, "base64");
+      doc.image(muhendisImzaBuffer, 350, startY, { width: 150, height: 70 });
+      doc.text("Mühendis İmzası", 380, startY + 80);
     }
 
     doc.end();
-    const pdfBuffer = await pdfPromise;
+    const pdfBuffer = await getStream.buffer(doc);
 
-    console.log("✅ Profesyonel PDF başarıyla oluşturuldu.");
-
-    // === MAIL ===
-    console.log("📡 Mail server’a bağlanılıyor...");
+    // Mail gönderimi
     const transporter = nodemailer.createTransport({
       host: process.env.EMAIL_HOST,
       port: parseInt(process.env.EMAIL_PORT || "587"),
@@ -116,24 +92,25 @@ export default async function handler(req, res) {
       },
     });
 
-    await transporter.sendMail({
-      from: `"Bakım Sistemi" <${process.env.EMAIL_USER}>`,
-      to: process.env.EMAIL_USER, // Buraya kendi mailini yaz
-      subject: "Yeni Bakım Raporu",
-      text: "Yeni bakım kaydı eklendi. PDF ektedir.",
+    const mailOptions = {
+      from: `"HTTV Sistem" <${process.env.EMAIL_USER}>`,
+      to: [process.env.EMAIL_USER, musteriEmail],
+      subject: "🛠️ Yeni Bakım Kaydı",
+      text: "Yeni bakım kaydı raporu ektedir.",
       attachments: [
         {
-          filename: `${raporNo}.pdf`,
+          filename: `bakim-raporu-${Date.now()}.pdf`,
           content: pdfBuffer,
         },
       ],
-    });
+    };
 
+    await transporter.sendMail(mailOptions);
     console.log("✅ Mail başarıyla gönderildi.");
 
-    return res.status(200).json({ message: "Bakım kaydı eklendi ve mail gönderildi!" });
-  } catch (error) {
-    console.error("❌ API Hatası:", error);
-    return res.status(500).json({ error: "Server error" });
+    return res.status(200).json({ success: true });
+  } catch (err: any) {
+    console.error("❌ API Hatası:", err);
+    return res.status(500).send("Sunucu hatası: " + err.message);
   }
 }

@@ -1,61 +1,53 @@
 import { useState, useRef } from "react";
 import SignatureCanvas from "react-signature-canvas";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Textarea } from "../components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
-export default function Ariza() {
-  const [formData, setFormData] = useState({
-    firmaIsmi: "",
-    tezgahSeriNo: "",
-    arizaTuru: "",
-    aciklama: "",
-    musteriIsmi: "",
-    musteriMail: "",
-    muhendisAdi: "",
-  });
-
+export default function ArizaForm() {
+  const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+
   const musteriImzaRef = useRef<SignatureCanvas>(null);
   const muhendisImzaRef = useRef<SignatureCanvas>(null);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const clearImza = (ref: React.RefObject<SignatureCanvas>) => {
-    ref.current?.clear();
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setMessage("Kaydediliyor...");
+    setLoading(true);
+    setMessage("");
 
-    const musteriImza = musteriImzaRef.current?.toDataURL() || "";
-    const muhendisImza = muhendisImzaRef.current?.toDataURL() || "";
+    const form = e.currentTarget;
+    const formData = {
+      firmaIsmi: (form.firmaIsmi as any).value,
+      musteriIsmi: (form.musteriIsmi as any).value,
+      musteriEmail: (form.musteriEmail as any).value,
+      tezgahSeriNo: (form.tezgahSeriNo as any).value,
+      aciklama: (form.aciklama as any).value,
+      muhendisAdi: (form.muhendisAdi as any).value,
+      musteriImza: musteriImzaRef.current?.getCanvas().toDataURL(),
+      muhendisImza: muhendisImzaRef.current?.getCanvas().toDataURL(),
+    };
 
-    const response = await fetch("/api/ariza", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...formData, musteriImza, muhendisImza }),
-    });
-
-    if (response.ok) {
-      setMessage("✅ Arıza kaydı eklendi ve mail gönderildi!");
-      setFormData({
-        firmaIsmi: "",
-        tezgahSeriNo: "",
-        arizaTuru: "",
-        aciklama: "",
-        musteriIsmi: "",
-        musteriMail: "",
-        muhendisAdi: "",
+    try {
+      const res = await fetch("/api/ariza", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
       });
-      musteriImzaRef.current?.clear();
-      muhendisImzaRef.current?.clear();
-    } else {
-      setMessage("❌ Hata: " + (await response.text()));
+
+      if (res.ok) {
+        setMessage("✅ Arıza kaydı oluşturuldu ve mail gönderildi.");
+        form.reset();
+        musteriImzaRef.current?.clear();
+        muhendisImzaRef.current?.clear();
+      } else {
+        setMessage("❌ Hata: " + (await res.text()));
+      }
+    } catch (err) {
+      setMessage("❌ Hata: Sunucuya ulaşılamadı.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -68,98 +60,53 @@ export default function Ariza() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-2 gap-4">
-              <Input
-                placeholder="Firma İsmi"
-                name="firmaIsmi"
-                value={formData.firmaIsmi}
-                onChange={handleChange}
-                required
-              />
-              <Input
-                placeholder="Tezgah Seri No"
-                name="tezgahSeriNo"
-                value={formData.tezgahSeriNo}
-                onChange={handleChange}
-                required
-              />
-              <Input
-                placeholder="Arıza Türü"
-                name="arizaTuru"
-                value={formData.arizaTuru}
-                onChange={handleChange}
-                required
-              />
-              <Input
-                placeholder="Müşteri İsmi"
-                name="musteriIsmi"
-                value={formData.musteriIsmi}
-                onChange={handleChange}
-                required
-              />
-              <Input
-                type="email"
-                placeholder="Müşteri Mail"
-                name="musteriMail"
-                value={formData.musteriMail}
-                onChange={handleChange}
-                required
-              />
-              <Input
-                placeholder="Mühendis Adı"
-                name="muhendisAdi"
-                value={formData.muhendisAdi}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <Textarea
-              placeholder="Açıklama"
-              name="aciklama"
-              value={formData.aciklama}
-              onChange={handleChange}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Input name="firmaIsmi" placeholder="Firma İsmi" required />
+            <Input name="musteriIsmi" placeholder="Müşteri İsmi" required />
+            <Input
+              name="musteriEmail"
+              type="email"
+              placeholder="Müşteri E-mail"
               required
-              className="h-24"
             />
+            <Input name="tezgahSeriNo" placeholder="Tezgah Seri No" required />
+            <Textarea name="aciklama" placeholder="Arıza Açıklaması" required />
+            <Input name="muhendisAdi" placeholder="Mühendis Adı" required />
 
             <div className="grid grid-cols-2 gap-6">
               <div>
-                <label className="font-medium">Müşteri İmzası</label>
+                <p className="font-semibold mb-1">Müşteri İmzası</p>
                 <SignatureCanvas
                   ref={musteriImzaRef}
-                  canvasProps={{ className: "border w-full h-40 rounded" }}
+                  penColor="black"
+                  canvasProps={{
+                    width: 250,
+                    height: 100,
+                    className: "border border-gray-400 rounded",
+                  }}
                 />
-                <Button
-                  type="button"
-                  onClick={() => clearImza(musteriImzaRef)}
-                  className="mt-2 bg-red-500 text-white"
-                >
-                  Temizle
-                </Button>
               </div>
               <div>
-                <label className="font-medium">Mühendis İmzası</label>
+                <p className="font-semibold mb-1">Mühendis İmzası</p>
                 <SignatureCanvas
                   ref={muhendisImzaRef}
-                  canvasProps={{ className: "border w-full h-40 rounded" }}
+                  penColor="black"
+                  canvasProps={{
+                    width: 250,
+                    height: 100,
+                    className: "border border-gray-400 rounded",
+                  }}
                 />
-                <Button
-                  type="button"
-                  onClick={() => clearImza(muhendisImzaRef)}
-                  className="mt-2 bg-red-500 text-white"
-                >
-                  Temizle
-                </Button>
               </div>
             </div>
 
-            <Button type="submit" className="w-full bg-blue-600 text-white font-semibold">
-              Kaydet
+            <Button type="submit" disabled={loading} className="w-full">
+              {loading ? "Gönderiliyor..." : "Kaydet"}
             </Button>
           </form>
-          {message && <p className="mt-6 text-center font-medium text-gray-700">{message}</p>}
+          {message && (
+            <p className="mt-4 text-center font-medium text-sm">{message}</p>
+          )}
         </CardContent>
       </Card>
     </div>
