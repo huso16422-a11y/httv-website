@@ -3,18 +3,18 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model Bakim {
   id            Int      @id @default(autoincrement())
-  firmaIsmi     String?
+  firmaIsmi     String
   tezgahSeriNo  String
   aciklama      String
   musteriAdi    String
   musteriMail   String
-  muhendisAdi   String?
+  muhendisAdi   String
   musteriImza   String?
   teknisyenImza String?
   createdAt     DateTime @default(now())
@@ -22,12 +22,12 @@ model Bakim {
 
 model Ariza {
   id            Int      @id @default(autoincrement())
-  firmaIsmi     String?
+  firmaIsmi     String
   tezgahSeriNo  String
   aciklama      String
   musteriIsmi   String
   musteriMail   String
-  muhendisAdi   String?
+  muhendisAdi   String
   musteriImza   String?
   teknisyenImza String?
   createdAt     DateTime @default(now())

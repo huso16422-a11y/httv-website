@@ -1,0 +1,14 @@
+[
+  {
+    "tezgahSeriNo": "12345",
+    "arizaAciklama": "Motor arızası",
+    "musteriIsmi": "Ahmet Yılmaz",
+    "muhendisAdi": "Mehmet Usta"
+  },
+  {
+    "tezgahSeriNo": "67890",
+    "arizaAciklama": "Elektrik kesintisi",
+    "musteriIsmi": "Firma X",
+    "muhendisAdi": "Ayşe Teknisyen"
+  }
+]

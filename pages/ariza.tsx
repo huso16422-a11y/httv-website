@@ -1,136 +1,108 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
+import SignatureCanvas from "react-signature-canvas";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
-export default function ArizaForm() {
+export default function ArizaPage() {
   const [formData, setFormData] = useState({
     firmaIsmi: "",
     tezgahSeriNo: "",
+    tezgahSaati: "",
     aciklama: "",
     musteriIsmi: "",
-    musteriMail: "",
+    musteriEmail: "",
     muhendisAdi: "",
-    musteriImza: "",
-    teknisyenImza: "",
   });
+  const [message, setMessage] = useState("");
 
-  const [mesaj, setMesaj] = useState("");
+  const musteriRef = useRef<any>(null);
+  const muhendisRef = useRef<any>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const clearSignature = (ref: any) => {
+    ref.current?.clear();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setMessage("Gönderiliyor...");
+
     try {
+      const musteriImza = musteriRef.current?.toDataURL("image/png");
+      const muhendisImza = muhendisRef.current?.toDataURL("image/png");
+
       const res = await fetch("/api/ariza", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, musteriImza, muhendisImza }),
       });
 
+      const data = await res.json();
       if (res.ok) {
-        setMesaj("✅ Arıza kaydı başarıyla oluşturuldu, PDF mail gönderildi.");
+        setMessage("✅ Arıza kaydı eklendi ve PDF gönderildi!");
         setFormData({
           firmaIsmi: "",
           tezgahSeriNo: "",
+          tezgahSaati: "",
           aciklama: "",
           musteriIsmi: "",
-          musteriMail: "",
+          musteriEmail: "",
           muhendisAdi: "",
-          musteriImza: "",
-          teknisyenImza: "",
         });
+        musteriRef.current?.clear();
+        muhendisRef.current?.clear();
       } else {
-        const err = await res.json();
-        setMesaj("❌ Hata: " + err.error);
+        setMessage("❌ Hata: " + data.message);
       }
-    } catch (error) {
-      console.error(error);
-      setMesaj("❌ Beklenmedik bir hata oluştu.");
+    } catch (err) {
+      setMessage("❌ Sunucuya bağlanılamadı");
     }
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6 bg-white shadow rounded">
-      <h1 className="text-xl font-bold mb-4">Arıza Kaydı</h1>
-      {mesaj && <p className="mb-4">{mesaj}</p>}
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <input
-          type="text"
-          name="firmaIsmi"
-          placeholder="Firma İsmi"
-          value={formData.firmaIsmi}
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
-        />
-        <input
-          type="text"
-          name="tezgahSeriNo"
-          placeholder="Tezgah Seri No"
-          value={formData.tezgahSeriNo}
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
-          required
-        />
-        <textarea
-          name="aciklama"
-          placeholder="Arıza Açıklaması"
-          value={formData.aciklama}
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
-          required
-        />
-        <input
-          type="text"
-          name="musteriIsmi"
-          placeholder="Müşteri Adı"
-          value={formData.musteriIsmi}
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
-          required
-        />
-        <input
-          type="email"
-          name="musteriMail"
-          placeholder="Müşteri Mail"
-          value={formData.musteriMail}
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
-          required
-        />
-        <input
-          type="text"
-          name="muhendisAdi"
-          placeholder="Mühendis Adı"
-          value={formData.muhendisAdi}
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
-        />
-        <input
-          type="text"
-          name="teknisyenImza"
-          placeholder="Teknisyen İmza"
-          value={formData.teknisyenImza}
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
-        />
-        <input
-          type="text"
-          name="musteriImza"
-          placeholder="Müşteri İmza"
-          value={formData.musteriImza}
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
-        />
-        <button
-          type="submit"
-          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
-        >
-          Kaydet
-        </button>
-      </form>
+    <div className="p-8 max-w-4xl mx-auto">
+      <Card className="shadow-2xl">
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold text-red-700">⚡ Arıza Kaydı</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-2 gap-4">
+              <Input name="firmaIsmi" value={formData.firmaIsmi} onChange={handleChange} placeholder="Firma İsmi" required />
+              <Input name="tezgahSeriNo" value={formData.tezgahSeriNo} onChange={handleChange} placeholder="Tezgah Seri No" required />
+              <Input name="tezgahSaati" value={formData.tezgahSaati} onChange={handleChange} placeholder="Tezgah Saati" />
+              <Input name="musteriIsmi" value={formData.musteriIsmi} onChange={handleChange} placeholder="Müşteri İsmi" />
+              <Input name="musteriEmail" type="email" value={formData.musteriEmail} onChange={handleChange} placeholder="Müşteri Email" />
+              <Input name="muhendisAdi" value={formData.muhendisAdi} onChange={handleChange} placeholder="Mühendis Adı" />
+            </div>
+
+            <Textarea name="aciklama" value={formData.aciklama} onChange={handleChange} placeholder="Arıza Açıklaması" />
+
+            <div className="grid grid-cols-2 gap-6">
+              <div>
+                <p className="font-semibold mb-2">🖊️ Müşteri İmzası</p>
+                <SignatureCanvas ref={musteriRef} penColor="black" canvasProps={{ className: "border rounded w-full h-32" }} />
+                <Button type="button" variant="destructive" size="sm" className="mt-2" onClick={() => clearSignature(musteriRef)}>Temizle</Button>
+              </div>
+              <div>
+                <p className="font-semibold mb-2">🖊️ Mühendis İmzası</p>
+                <SignatureCanvas ref={muhendisRef} penColor="black" canvasProps={{ className: "border rounded w-full h-32" }} />
+                <Button type="button" variant="destructive" size="sm" className="mt-2" onClick={() => clearSignature(muhendisRef)}>Temizle</Button>
+              </div>
+            </div>
+
+            <Button type="submit" className="bg-red-600 hover:bg-red-700 w-full">
+              Kaydı Gönder
+            </Button>
+          </form>
+          {message && <p className="mt-4 text-center">{message}</p>}
+        </CardContent>
+      </Card>
     </div>
   );
 }
