@@ -1,9 +1,9 @@
 import { useState, useRef } from "react";
 import SignatureCanvas from "react-signature-canvas";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Textarea } from "../components/ui/textarea";
 
 export default function Bakim() {
   const [formData, setFormData] = useState({
@@ -12,7 +12,7 @@ export default function Bakim() {
     tezgahSaati: "",
     aciklama: "",
     musteriIsmi: "",
-    musteriMail: "",   // ✅ müşteri maili eklendi
+    musteriMail: "",
     muhendisAdi: "",
   });
 
@@ -124,13 +124,12 @@ export default function Bakim() {
               className="h-24"
             />
 
-            {/* İmza Alanları */}
             <div className="grid grid-cols-2 gap-6">
               <div>
                 <label className="font-medium">Müşteri İmzası</label>
                 <SignatureCanvas
                   ref={musteriImzaRef}
-                  canvasProps={{ className: "border w-full h-40 rounded" }} // ✅ ikisi eşit boy
+                  canvasProps={{ className: "border w-full h-40 rounded" }}
                 />
                 <Button
                   type="button"
@@ -140,12 +139,11 @@ export default function Bakim() {
                   Temizle
                 </Button>
               </div>
-
               <div>
                 <label className="font-medium">Mühendis İmzası</label>
                 <SignatureCanvas
                   ref={muhendisImzaRef}
-                  canvasProps={{ className: "border w-full h-40 rounded" }} // ✅ ikisi eşit boy
+                  canvasProps={{ className: "border w-full h-40 rounded" }}
                 />
                 <Button
                   type="button"
@@ -161,10 +159,7 @@ export default function Bakim() {
               Kaydet
             </Button>
           </form>
-
-          {message && (
-            <p className="mt-6 text-center font-medium text-gray-700">{message}</p>
-          )}
+          {message && <p className="mt-6 text-center font-medium text-gray-700">{message}</p>}
         </CardContent>
       </Card>
     </div>

@@ -1,106 +1,165 @@
 import { useState, useRef } from "react";
 import SignatureCanvas from "react-signature-canvas";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Textarea } from "../components/ui/textarea";
 
-export default function ArizaPage() {
+export default function Ariza() {
   const [formData, setFormData] = useState({
     firmaIsmi: "",
     tezgahSeriNo: "",
-    tezgahSaati: "",
+    arizaTuru: "",
     aciklama: "",
     musteriIsmi: "",
-    musteriEmail: "",
+    musteriMail: "",
     muhendisAdi: "",
   });
-  const [message, setMessage] = useState("");
 
-  const musteriRef = useRef<any>(null);
-  const muhendisRef = useRef<any>(null);
+  const [message, setMessage] = useState("");
+  const musteriImzaRef = useRef<SignatureCanvas>(null);
+  const muhendisImzaRef = useRef<SignatureCanvas>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const clearSignature = (ref: any) => {
+  const clearImza = (ref: React.RefObject<SignatureCanvas>) => {
     ref.current?.clear();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setMessage("Gönderiliyor...");
+    setMessage("Kaydediliyor...");
 
-    try {
-      const musteriImza = musteriRef.current?.toDataURL("image/png");
-      const muhendisImza = muhendisRef.current?.toDataURL("image/png");
+    const musteriImza = musteriImzaRef.current?.toDataURL() || "";
+    const muhendisImza = muhendisImzaRef.current?.toDataURL() || "";
 
-      const res = await fetch("/api/ariza", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, musteriImza, muhendisImza }),
+    const response = await fetch("/api/ariza", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...formData, musteriImza, muhendisImza }),
+    });
+
+    if (response.ok) {
+      setMessage("✅ Arıza kaydı eklendi ve mail gönderildi!");
+      setFormData({
+        firmaIsmi: "",
+        tezgahSeriNo: "",
+        arizaTuru: "",
+        aciklama: "",
+        musteriIsmi: "",
+        musteriMail: "",
+        muhendisAdi: "",
       });
-
-      const data = await res.json();
-      if (res.ok) {
-        setMessage("✅ Arıza kaydı eklendi ve PDF gönderildi!");
-        setFormData({
-          firmaIsmi: "",
-          tezgahSeriNo: "",
-          tezgahSaati: "",
-          aciklama: "",
-          musteriIsmi: "",
-          musteriEmail: "",
-          muhendisAdi: "",
-        });
-        musteriRef.current?.clear();
-        muhendisRef.current?.clear();
-      } else {
-        setMessage("❌ Hata: " + data.message);
-      }
-    } catch (err) {
-      setMessage("❌ Sunucuya bağlanılamadı");
+      musteriImzaRef.current?.clear();
+      muhendisImzaRef.current?.clear();
+    } else {
+      setMessage("❌ Hata: " + (await response.text()));
     }
   };
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
-      <Card className="shadow-2xl">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
+      <Card className="w-full max-w-3xl shadow-lg">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold text-red-700">⚡ Arıza Kaydı</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center text-gray-700">
+            ⚡ Arıza Kaydı Formu
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
-              <Input name="firmaIsmi" value={formData.firmaIsmi} onChange={handleChange} placeholder="Firma İsmi" required />
-              <Input name="tezgahSeriNo" value={formData.tezgahSeriNo} onChange={handleChange} placeholder="Tezgah Seri No" required />
-              <Input name="tezgahSaati" value={formData.tezgahSaati} onChange={handleChange} placeholder="Tezgah Saati" />
-              <Input name="musteriIsmi" value={formData.musteriIsmi} onChange={handleChange} placeholder="Müşteri İsmi" />
-              <Input name="musteriEmail" type="email" value={formData.musteriEmail} onChange={handleChange} placeholder="Müşteri Email" />
-              <Input name="muhendisAdi" value={formData.muhendisAdi} onChange={handleChange} placeholder="Mühendis Adı" />
+              <Input
+                placeholder="Firma İsmi"
+                name="firmaIsmi"
+                value={formData.firmaIsmi}
+                onChange={handleChange}
+                required
+              />
+              <Input
+                placeholder="Tezgah Seri No"
+                name="tezgahSeriNo"
+                value={formData.tezgahSeriNo}
+                onChange={handleChange}
+                required
+              />
+              <Input
+                placeholder="Arıza Türü"
+                name="arizaTuru"
+                value={formData.arizaTuru}
+                onChange={handleChange}
+                required
+              />
+              <Input
+                placeholder="Müşteri İsmi"
+                name="musteriIsmi"
+                value={formData.musteriIsmi}
+                onChange={handleChange}
+                required
+              />
+              <Input
+                type="email"
+                placeholder="Müşteri Mail"
+                name="musteriMail"
+                value={formData.musteriMail}
+                onChange={handleChange}
+                required
+              />
+              <Input
+                placeholder="Mühendis Adı"
+                name="muhendisAdi"
+                value={formData.muhendisAdi}
+                onChange={handleChange}
+                required
+              />
             </div>
 
-            <Textarea name="aciklama" value={formData.aciklama} onChange={handleChange} placeholder="Arıza Açıklaması" />
+            <Textarea
+              placeholder="Açıklama"
+              name="aciklama"
+              value={formData.aciklama}
+              onChange={handleChange}
+              required
+              className="h-24"
+            />
 
             <div className="grid grid-cols-2 gap-6">
               <div>
-                <p className="font-semibold mb-2">🖊️ Müşteri İmzası</p>
-                <SignatureCanvas ref={musteriRef} penColor="black" canvasProps={{ className: "border rounded w-full h-32" }} />
-                <Button type="button" variant="destructive" size="sm" className="mt-2" onClick={() => clearSignature(musteriRef)}>Temizle</Button>
+                <label className="font-medium">Müşteri İmzası</label>
+                <SignatureCanvas
+                  ref={musteriImzaRef}
+                  canvasProps={{ className: "border w-full h-40 rounded" }}
+                />
+                <Button
+                  type="button"
+                  onClick={() => clearImza(musteriImzaRef)}
+                  className="mt-2 bg-red-500 text-white"
+                >
+                  Temizle
+                </Button>
               </div>
               <div>
-                <p className="font-semibold mb-2">🖊️ Mühendis İmzası</p>
-                <SignatureCanvas ref={muhendisRef} penColor="black" canvasProps={{ className: "border rounded w-full h-32" }} />
-                <Button type="button" variant="destructive" size="sm" className="mt-2" onClick={() => clearSignature(muhendisRef)}>Temizle</Button>
+                <label className="font-medium">Mühendis İmzası</label>
+                <SignatureCanvas
+                  ref={muhendisImzaRef}
+                  canvasProps={{ className: "border w-full h-40 rounded" }}
+                />
+                <Button
+                  type="button"
+                  onClick={() => clearImza(muhendisImzaRef)}
+                  className="mt-2 bg-red-500 text-white"
+                >
+                  Temizle
+                </Button>
               </div>
             </div>
 
-            <Button type="submit" className="bg-red-600 hover:bg-red-700 w-full">
-              Kaydı Gönder
+            <Button type="submit" className="w-full bg-blue-600 text-white font-semibold">
+              Kaydet
             </Button>
           </form>
-          {message && <p className="mt-4 text-center">{message}</p>}
+          {message && <p className="mt-6 text-center font-medium text-gray-700">{message}</p>}
         </CardContent>
       </Card>
     </div>
