@@ -1,105 +1,82 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
-import { Lock, Mail } from "lucide-react";
+import { useRouter } from "next/router";
 
-export default function PremiumLogin() {
+export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [mesaj, setMesaj] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (email === "admin@demo.com" && password === "123456") {
-      setMesaj("✅ Giriş başarılı!");
+    if (email === "admin@demo.com" && password === "1234") {
+      alert("✅ Giriş başarılı!");
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 1000);
     } else {
-      setMesaj("❌ Hatalı giriş bilgileri!");
+      alert("❌ Geçersiz kullanıcı adı veya şifre!");
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0a0a1a] via-[#0f1f3a] to-[#2ab3f0] relative overflow-hidden">
-      {/* Glow efektleri */}
-      <div className="absolute -top-40 -left-40 w-[400px] h-[400px] rounded-full opacity-30 blur-3xl bg-cyan-400/50 animate-pulse" />
-      <div className="absolute -bottom-40 -right-40 w-[400px] h-[400px] rounded-full opacity-30 blur-3xl bg-blue-400/50 animate-pulse" />
-
-      {/* Watermark logo */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <img
-          src="/logo.png"
-          alt="HTTV Logo"
-          className="w-[420px] opacity-10 grayscale"
-        />
-      </div>
-
-      {/* Login Card */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7 }}
-        className="relative z-10 w-full max-w-md px-8 py-10 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-2xl shadow-2xl"
-      >
-        {/* Logo + Başlık */}
-        <div className="flex flex-col items-center mb-6">
+    <div className="flex h-screen items-center justify-center bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600">
+      <div className="w-full max-w-md rounded-2xl bg-white/90 p-8 shadow-2xl backdrop-blur-sm">
+        {/* Logo */}
+        <div className="mb-6 text-center">
           <img
             src="/logo.png"
-            alt="Logo"
-            className="w-16 h-16 object-contain mb-3 drop-shadow-lg"
+            alt="HTTV Logo"
+            className="mx-auto mb-4 h-16 w-16 drop-shadow-md"
           />
-          <h1 className="text-white text-xl font-bold">HTTV Yönetim Paneli</h1>
-          <p className="text-white/60 text-sm mt-1">Lütfen giriş yapın</p>
+          <h1 className="text-3xl font-extrabold text-gray-800">
+            HTTV Yönetim Paneli
+          </h1>
+          <p className="text-gray-600">Lütfen giriş yapın</p>
         </div>
 
-        {mesaj && (
-          <div
-            className={`mb-4 p-2 rounded text-center text-sm font-medium ${
-              mesaj.includes("✅")
-                ? "bg-green-500/20 text-green-100"
-                : "bg-red-500/20 text-red-100"
-            }`}
-          >
-            {mesaj}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="relative">
-            <Mail className="absolute left-2 top-2.5 text-white/60" size={16} />
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700">
+              Email
+            </label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="E-posta"
-              className="w-full pl-8 pr-3 py-2 rounded-md bg-white/10 text-white placeholder-white/40 border border-white/20 focus:outline-none focus:ring-2 focus:ring-cyan-400 text-sm"
+              className="mt-1 w-full rounded-lg border border-gray-300 p-3 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-400 focus:outline-none"
+              placeholder="admin@demo.com"
               required
             />
           </div>
 
-          <div className="relative">
-            <Lock className="absolute left-2 top-2.5 text-white/60" size={16} />
+          <div>
+            <label className="block text-sm font-semibold text-gray-700">
+              Şifre
+            </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Şifre"
-              className="w-full pl-8 pr-3 py-2 rounded-md bg-white/10 text-white placeholder-white/40 border border-white/20 focus:outline-none focus:ring-2 focus:ring-cyan-400 text-sm"
+              className="mt-1 w-full rounded-lg border border-gray-300 p-3 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-400 focus:outline-none"
+              placeholder="••••••"
               required
             />
           </div>
 
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+          <button
             type="submit"
-            className="w-full py-2 rounded-md font-semibold text-white bg-gradient-to-r from-cyan-400 to-blue-500 shadow-lg text-sm"
+            className="w-full rounded-lg bg-indigo-600 py-3 font-bold text-white shadow-md transition duration-300 hover:scale-[1.02] hover:bg-indigo-700"
           >
             Giriş Yap
-          </motion.button>
+          </button>
         </form>
 
-        <p className="text-center text-xs text-white/50 mt-6">
-          © {new Date().getFullYear()} HTTV | All rights reserved
+        {/* Alt bilgi */}
+        <p className="mt-8 text-center text-sm text-gray-500">
+          © 2025 HTTV | Tüm hakları saklıdır.
         </p>
-      </motion.div>
+      </div>
     </div>
   );
 }
